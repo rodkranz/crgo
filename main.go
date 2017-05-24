@@ -1,44 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"io/ioutil"
 	"os"
-	"net/http"
-	"runtime"
+	"log"
+	"github.com/rodkranz/crgo/crgo"
 )
 
-func Request(url string, chn chan <-string) {
-	start := time.Now()
-	resp, err := http.Get(url)
-	secs := time.Since(start).Seconds()
-
-	if err != nil {
-		chn <- fmt.Sprintf("[%.2fs] Error: %s", secs, err.Error())
-		return
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	chn <- fmt.Sprintf("[%.2fs] elapsed time for request [%s] with [%d] ", secs, url, len(body))
-}
-
-
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
-
 func main() {
-	start := time.Now()
-	chn := make(chan string)
-
-	for _, url := range os.Args[1:] {
-		go Request(url, chn)
+	if err := crgo.Run(os.Args[1:]); err != nil {
+		log.Printf("err: %v ", err)
+		os.Exit(1)
 	}
-
-	for range os.Args[1:] {
-		fmt.Println(<-chn)
-	}
-
-	fmt.Printf("[%.2fs] elapsed time.\n", time.Since(start).Seconds())
+	os.Exit(0)
 }
